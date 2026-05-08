@@ -1,0 +1,21 @@
+android_app {
+    name: "uwuClock",
+
+    srcs: ["src/**/*.kt"],
+    resource_dirs: ["res"],
+    manifest: "AndroidManifest.xml",
+
+    system_ext_specific: true,
+    platform_apis: true,
+    certificate: "platform",
+    privileged: true,
+
+    libs: ["SystemUIPluginLib"],
+    static_libs: ["SystemUIClocks-CommonLib"],
+
+    optimize: {
+        optimize: true,
+        proguard_flags_files: ["proguard-rules.pro"],
+        shrink_resources: false,
+    },
+}

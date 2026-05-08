@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="org.uwuaosp.clock">
+
+    <uses-sdk android:minSdkVersion="28" />
+
+    <uses-permission android:name="com.android.systemui.permission.PLUGIN" />
+
+    <application>
+        <service
+            android:name="org.uwuaosp.clock.UwuClockProvider"
+            android:directBootAware="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.android.systemui.action.PLUGIN_CLOCK_PROVIDER" />
+            </intent-filter>
+        </service>
+    </application>
+</manifest>

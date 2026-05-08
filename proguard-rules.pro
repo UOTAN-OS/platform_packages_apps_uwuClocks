@@ -1,0 +1,1 @@
+-keepclassmembers class org.uwuaosp.clock.R$* { public static <fields>; }

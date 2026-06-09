@@ -9,6 +9,7 @@
     <application>
         <service
             android:name="org.uwuaosp.clock.UwuClockProvider"
+            android:enabled="true"
             android:directBootAware="true"
             android:exported="true">
             <intent-filter>

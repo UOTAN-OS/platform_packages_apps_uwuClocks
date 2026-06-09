@@ -2,7 +2,6 @@ package org.uwuaosp.clock
 
 import android.content.Context
 import android.graphics.Color
-import android.graphics.Rect
 import android.icu.text.SimpleDateFormat
 import android.icu.util.TimeZone
 import android.util.TypedValue
@@ -13,7 +12,6 @@ import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.Space
 import android.widget.TextView
-import com.android.systemui.customization.clocks.DefaultClockFaceLayout
 import com.android.systemui.customization.clocks.DigitalTimeFormatter
 import com.android.systemui.customization.clocks.DigitalTimespec
 import com.android.systemui.customization.clocks.DigitalTimespecHandler
@@ -31,7 +29,6 @@ import com.android.systemui.plugins.keyguard.ui.clocks.ThemeConfig
 import com.android.systemui.plugins.keyguard.ui.clocks.TimeFormatKind
 import java.util.Locale
 import kotlin.math.max
-import kotlin.math.min
 
 class UwuClockFaceController(
     private val pluginCtx: Context,
@@ -48,8 +45,6 @@ class UwuClockFaceController(
 
     private var locale: Locale = Locale.getDefault()
     private var timeZone: TimeZone = TimeZone.getDefault()
-    private var targetRegion: Rect? = null
-    private var isLayoutUpdatePosted = false
     private var lastRenderedTimeText = ""
     private var lastRenderedDateText = ""
 
@@ -89,10 +84,10 @@ class UwuClockFaceController(
                 gravity = Gravity.CENTER_HORIZONTAL
                 clipChildren = false
                 clipToPadding = false
-                timeRow.addView(hourView)
-                timeRow.addView(minuteView)
+                timeRow.addView(hourView, wrapContentLayoutParams())
+                timeRow.addView(minuteView, wrapContentLayoutParams())
                 addView(topSpacer, LinearLayout.LayoutParams(1, 0))
-                addView(timeRow)
+                addView(timeRow, wrapContentLayoutParams())
                 addView(dateView)
                 addView(bottomSpacer, LinearLayout.LayoutParams(1, 0))
             }
@@ -130,7 +125,7 @@ class UwuClockFaceController(
             )
         }
 
-    override val layout = DefaultClockFaceLayout(view)
+    override val layout = UwuClockFaceLayout(view)
     override val config = ClockFaceConfig()
     override var theme = ThemeConfig(isDarkTheme = true, settings.seedColor)
 
@@ -148,14 +143,10 @@ class UwuClockFaceController(
 
             override fun onFontSettingChanged(fontSizePx: Float) {
                 applyFontSizes(fontSizePx)
-                scheduleLayoutUpdate()
+                contentView.requestLayout()
             }
 
-            override fun onTargetRegionChanged(targetRegion: Rect?) {
-                this@UwuClockFaceController.targetRegion =
-                    targetRegion?.let { Rect(it) }
-                scheduleLayoutUpdate()
-            }
+            override fun onTargetRegionChanged(targetRegion: android.graphics.Rect?) {}
 
             override fun onSecondaryDisplayChanged(onSecondaryDisplay: Boolean) {}
         }
@@ -185,9 +176,6 @@ class UwuClockFaceController(
         }
 
     init {
-        contentView.addOnLayoutChangeListener { _, _, _, _, _, _, _, _, _ ->
-            applyLayoutInTargetRegion()
-        }
         applyFontSizes(defaultFontSizePx())
         applyPalette(theme)
         refreshClock(forceLayout = true)
@@ -246,7 +234,7 @@ class UwuClockFaceController(
         dateView.text = dateText
         lastRenderedTimeText = timeText
         lastRenderedDateText = dateText
-        scheduleLayoutUpdate()
+        contentView.requestLayout()
         logger.i("Rendered uwu clock: ${hourView.getGlyphText()} ${dateView.text} ${minuteView.getGlyphText()}")
     }
 
@@ -399,66 +387,6 @@ class UwuClockFaceController(
         return Color.HSVToColor(alpha, shifted)
     }
 
-    private fun scheduleLayoutUpdate() {
-        if (isLayoutUpdatePosted) {
-            return
-        }
-        isLayoutUpdatePosted = true
-        contentView.post {
-            isLayoutUpdatePosted = false
-            applyLayoutInTargetRegion()
-        }
-    }
-
-    private fun updateLayoutInTargetRegion() {
-        scheduleLayoutUpdate()
-    }
-
-    private fun applyLayoutInTargetRegion() {
-        val region = targetRegion ?: return
-        val width = max(contentView.width.takeIf { it > 0 } ?: contentView.measuredWidth, 1)
-        val height = max(contentView.height.takeIf { it > 0 } ?: contentView.measuredHeight, 1)
-        val isHorizontalLarge = clockId == UwuClockProvider.HORIZONTAL_CLOCK_ID
-        val horizontalPadding =
-            when {
-                isHorizontalLarge && isLargeClock -> dp(16).toFloat()
-                isHorizontalLarge -> dp(8).toFloat()
-                isLargeClock -> dp(16).toFloat()
-                else -> dp(8).toFloat()
-            }
-        val verticalPadding =
-            when {
-                isHorizontalLarge && isLargeClock -> dp(12).toFloat()
-                isHorizontalLarge -> dp(8).toFloat()
-                isLargeClock -> dp(8).toFloat()
-                else -> dp(4).toFloat()
-            }
-        val availableWidth = max(1f, region.width().toFloat() - horizontalPadding * 2f)
-        val availableHeight = max(1f, region.height().toFloat() - verticalPadding * 2f)
-        val scale =
-                min(
-                    1f,
-                    min(availableWidth / width.toFloat(), availableHeight / height.toFloat()),
-                ) *
-                when {
-                    isHorizontalLarge && isLargeClock -> 0.82f
-                    isHorizontalLarge -> 0.90f
-                    isLargeClock -> 0.96f
-                    else -> 0.98f
-                }
-
-        contentView.pivotX = width / 2f
-        contentView.pivotY = height / 2f
-        contentView.scaleX = scale
-        contentView.scaleY = scale
-        contentView.translationY =
-            if (isHorizontalRow) {
-                -(region.height() * 0.03f)
-            } else {
-                0f
-            }
-    }
-
     private fun updateLinearLayoutParams(
         child: View,
         height: Int = ViewGroup.LayoutParams.WRAP_CONTENT,
@@ -478,6 +406,12 @@ class UwuClockFaceController(
         params.bottomMargin = bottomMargin
         child.layoutParams = params
     }
+
+    private fun wrapContentLayoutParams(): LinearLayout.LayoutParams =
+        LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+            ViewGroup.LayoutParams.WRAP_CONTENT,
+        )
 
     private fun buildTextView(fontWeight: Int, fontFamily: String): TextView {
         return TextView(pluginCtx).apply {

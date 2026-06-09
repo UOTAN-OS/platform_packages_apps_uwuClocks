@@ -8,6 +8,7 @@ import android.graphics.Typeface
 import android.graphics.drawable.Drawable
 import android.text.TextPaint
 import android.view.Gravity
+import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.TextView
@@ -80,12 +81,16 @@ class UwuGlyphView(context: Context) : FrameLayout(context) {
                 showVectorMode()
             }
         }
+        requestLayout()
+        invalidate()
     }
 
     fun setDrawableGlyph(drawable: Drawable?) {
         renderMode = GlyphRenderMode.VECTOR
         imageView.setImageDrawable(drawable)
         showVectorMode()
+        requestLayout()
+        invalidate()
     }
 
     fun setRenderMode(mode: GlyphRenderMode) {
@@ -99,6 +104,7 @@ class UwuGlyphView(context: Context) : FrameLayout(context) {
         textView.setTextSize(unit, size)
         currentTextSizePx = size
         refreshVectorDrawable()
+        requestLayout()
     }
 
     fun setTextColor(color: Int) {
@@ -124,6 +130,7 @@ class UwuGlyphView(context: Context) : FrameLayout(context) {
     fun setStyleScale(scale: Float) {
         currentStyleScale = scale
         refreshVectorDrawable()
+        requestLayout()
     }
 
     private fun refreshVectorDrawable() {
@@ -140,6 +147,19 @@ class UwuGlyphView(context: Context) : FrameLayout(context) {
     private fun showVectorMode() {
         textView.visibility = GONE
         imageView.visibility = VISIBLE
+    }
+
+    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
+        val activeChild: View =
+            when (renderMode) {
+                GlyphRenderMode.TEXT -> textView
+                GlyphRenderMode.VECTOR -> imageView
+            }
+        measureChild(activeChild, widthMeasureSpec, heightMeasureSpec)
+        setMeasuredDimension(
+            resolveSize(activeChild.measuredWidth + paddingLeft + paddingRight, widthMeasureSpec),
+            resolveSize(activeChild.measuredHeight + paddingTop + paddingBottom, heightMeasureSpec),
+        )
     }
 
     private class TextGlyphDrawable(

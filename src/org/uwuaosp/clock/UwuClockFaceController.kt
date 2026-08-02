@@ -27,6 +27,7 @@ import com.android.systemui.plugins.keyguard.ui.clocks.ClockSettings
 import com.android.systemui.plugins.keyguard.ui.clocks.ClockViewIds
 import com.android.systemui.plugins.keyguard.ui.clocks.ThemeConfig
 import com.android.systemui.plugins.keyguard.ui.clocks.TimeFormatKind
+import com.android.systemui.plugins.keyguard.VRect
 import java.util.Locale
 import kotlin.math.max
 
@@ -146,7 +147,7 @@ class UwuClockFaceController(
                 contentView.requestLayout()
             }
 
-            override fun onTargetRegionChanged(targetRegion: android.graphics.Rect?) {}
+            override fun onTargetRegionChanged(targetRegion: VRect) {}
 
             override fun onSecondaryDisplayChanged(onSecondaryDisplay: Boolean) {}
         }

@@ -6,7 +6,7 @@ import androidx.constraintlayout.widget.ConstraintSet.END
 import androidx.constraintlayout.widget.ConstraintSet.MATCH_CONSTRAINT
 import androidx.constraintlayout.widget.ConstraintSet.PARENT_ID
 import androidx.constraintlayout.widget.ConstraintSet.START
-import com.android.systemui.customization.clocks.DefaultClockFaceLayout
+import com.android.systemui.customization.clocks.view.DefaultClockFaceLayout
 import com.android.systemui.plugins.keyguard.ui.clocks.ClockPreviewConfig
 import com.android.systemui.plugins.keyguard.ui.clocks.ClockViewIds
 
